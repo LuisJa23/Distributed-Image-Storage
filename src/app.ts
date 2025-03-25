@@ -3,10 +3,10 @@ dotenv.config();
 
 import express from 'express';
 import visionRoutes from './routes/vision_routes';
+import imageRoutes from './routes/image_routes';
 import path from 'path';
 import fs from 'fs';
 
-// Asegurar que la carpeta uploads existe
 const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -22,16 +22,23 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Rutas para la API de visión
+// Rutas para la API
 app.use('/api/vision', visionRoutes);
+app.use('/api/images', imageRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'API de Google Vision funcionando correctamente',
+    message: 'API de Imágenes funcionando correctamente',
     endpoints: {
-      labels: '/api/vision/labels',
-      landmark: '/api/vision/landmark'
+      vision: {
+        labels: '/api/vision/labels',
+        landmark: '/api/vision/landmark'
+      },
+      images: {
+        upload: '/api/images/upload',
+        delete: '/api/images/:fileName'
+      }
     }
   });
 });

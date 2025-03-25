@@ -1,36 +1,65 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { detectLandmark, detectLabels } from '../services/vision_service';
-import upload from '../config/multer_config.js';
+import { MulterRequest } from '../interfaces/multer_request';
 
-
-const router = Router();
-
-router.post('/landmark', upload.single('image'), async (req: Request, res: Response): Promise<void> => {
+export class VisionController {
+  /**
+   * Detecta puntos de referencia en una imagen
+   * @param req Request con el archivo de imagen
+   * @param res Response de Express
+   */
+  static async detectLandmark(req: MulterRequest, res: Response): Promise<void> {
     try {
-        if (!req.file) {
-            res.status(400).json({ error: 'Por favor, sube una imagen.' });
-            return;
-        }
+      if (!req.file) {
+        res.status(400).json({ 
+          success: false,
+          error: 'Por favor, sube una imagen.' 
+        });
+        return;
+      }
 
-        const result = await detectLandmark(req.file.path);
-        res.json({ landmark: result });
+      const result = await detectLandmark(req.file.path);
+      res.json({ 
+        success: true,
+        landmark: result 
+      });
     } catch (error) {
-        res.status(500).json({ error: (error as Error).message });
+      console.error('Error en VisionController.detectLandmark:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Error al detectar landmark',
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
-});
-router.post('/labels', upload.single('image'), async (req: Request, res: Response): Promise<void> => {
+  }
+
+  /**
+   * Detecta etiquetas en una imagen
+   * @param req Request con el archivo de imagen
+   * @param res Response de Express
+   */
+  static async detectLabels(req: MulterRequest, res: Response): Promise<void> {
     try {
-        if (!req.file) {
-            res.status(400).json({ error: 'Por favor, sube una imagen.' });
-            return;
-        }
+      if (!req.file) {
+        res.status(400).json({ 
+          success: false,
+          error: 'Por favor, sube una imagen.' 
+        });
+        return;
+      }
 
-        const result = await detectLabels(req.file.path);
-        res.json({ labels: result });
+      const result = await detectLabels(req.file.path);
+      res.json({ 
+        success: true,
+        labels: result 
+      });
     } catch (error) {
-        res.status(500).json({ error: (error as Error).message });
+      console.error('Error en VisionController.detectLabels:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Error al detectar etiquetas',
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
-});
-
-
-export default router;
+  }
+}
