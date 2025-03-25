@@ -2,7 +2,10 @@ import { storageClient, bucketName } from '../config/storage_config';
 import path from 'path';
 import fs from 'fs';
 
+
 export class StorageService {
+
+  //Funcion para subir imagen
   static async uploadImage(filePath: string, destinationName?: string) {
     try {
       const destName = destinationName || path.basename(filePath);
@@ -26,6 +29,7 @@ export class StorageService {
     }
   }
 
+  //Funcion para eliminar imagen
   static async deleteImage(fileName: string) {
     try {
       await storageClient.bucket(bucketName).file(fileName).delete();

@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
-import visionRoutes from './routes/vision_routes';
-import imageRoutes from './routes/image_routes';
+
+import imageRoutes from './routes/routes';
 import path from 'path';
 import fs from 'fs';
 
@@ -23,8 +23,8 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // Rutas para la API
-app.use('/api/vision', visionRoutes);
-app.use('/api/images', imageRoutes);
+app.use('/api/vision', imageRoutes);
+app.use('/api/storage', imageRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {
@@ -36,8 +36,8 @@ app.get('/', (req, res) => {
         landmark: '/api/vision/landmark'
       },
       images: {
-        upload: '/api/images/upload',
-        delete: '/api/images/:fileName'
+        upload: '/api/storage/upload',
+        delete: '/api/storage/:fileName'
       }
     }
   });

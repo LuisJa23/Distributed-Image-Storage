@@ -1,65 +1,111 @@
-import { Storage } from '@google-cloud/storage';
-import path from 'path';
-import fs from 'fs';
+import { Request, Response } from 'express';
+import { ImageService } from '../services/image_service';
+import { MulterRequest } from '../interfaces/multer_request';
 
-// 1. Configuración (ajusta estas rutas según tu proyecto)
-const CONFIG = {
-  CREDENTIALS_PATH: path.resolve(__dirname, '../config/tokyo-house-454522-g7-8ac87bf0be98.json'),
-  BUCKET_NAME: 'laboratorio_2',
-  IMAGE_PATH: path.resolve(__dirname, 'controllers/Tigre.jpg') // Ruta a tu imagen
-};
+export class StorageController {
+  /**
+   * Sube una imagen a Google Cloud Storage
+   * @param req Request de Express con el archivo de imagen
+   * @param res Response de Express
+   */
+  static async uploadImage(req: MulterRequest, res: Response): Promise<void> {
+    try {
+      // Validar que se haya subido un archivo
+      if (!req.file) {
+        res.status(400).json({ 
+          success: false,
+          error: 'No se proporcionó ningún archivo de imagen' 
+        });
+        return;
+      }
 
-// 2. Verifica que el archivo de imagen existe
-if (!fs.existsSync(CONFIG.IMAGE_PATH)) {
-  throw new Error(`❌ No se encontró la imagen en: ${CONFIG.IMAGE_PATH}`);
-}
+      // Validar el tipo de archivo
+      const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validMimeTypes.includes(req.file.mimetype)) {
+        res.status(400).json({
+          success: false,
+          error: 'Tipo de archivo no válido. Solo se permiten imágenes JPEG, PNG, GIF o WEBP'
+        });
+        return;
+      }
 
-// 3. Inicializa el cliente de Google Cloud Storage
-const storage = new Storage({
-  keyFilename: CONFIG.CREDENTIALS_PATH,
-  projectId: 'tokyo-house-454522-g7'
-});
-
-// 4. Función para subir la imagen
-async function uploadImage() {
-  try {
-    console.log('📤 Iniciando subida de imagen...');
-
-    const bucket = storage.bucket(CONFIG.BUCKET_NAME);
-    const fileName = `Tigre-${Date.now()}.jpg`; // Nombre único en GCS
-    const file = bucket.file(fileName);
-
-    // Opciones de subida
-    const options = {
-      metadata: {
-        contentType: 'image/jpeg',
-        metadata: {
-          originalName: 'Tigre.jpg',
-          uploadedAt: new Date().toISOString()
+      // Subir la imagen al servicio de almacenamiento
+      const uploadResult = await ImageService.uploadImage(req.file.path);
+      
+      res.status(201).json({
+        success: true,
+        message: 'Imagen subida exitosamente',
+        data: {
+          fileName: uploadResult.name,
+          publicUrl: uploadResult.publicUrl
         }
-      },
-      public: true
-    };
+      });
 
-    // Sube el archivo
-    await file.save(fs.readFileSync(CONFIG.IMAGE_PATH), options);
-    await file.makePublic();
+    } catch (error) {
+      console.error('Error en ImageController.uploadImage:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Error interno al procesar la imagen',
+        details: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
+  }
 
-    const publicUrl = `https://storage.googleapis.com/${CONFIG.BUCKET_NAME}/${fileName}`;
-    
-    console.log('✅ ¡Imagen subida exitosamente!');
-    console.log('🔗 URL pública:', publicUrl);
+  /**
+   * Elimina una imagen de Google Cloud Storage
+   * @param req Request de Express con el nombre del archivo a eliminar
+   * @param res Response de Express
+   */
+  static async deleteImage(req: Request, res: Response): Promise<void> {
+    try {
+      const { fileName } = req.params;
 
-    return publicUrl;
+      // Validar que se proporcionó un nombre de archivo
+      if (!fileName) {
+        res.status(400).json({
+          success: false,
+          error: 'Nombre de archivo no proporcionado'
+        });
+        return;
+      }
 
-  } catch (error) {
-    console.error('❌ Error al subir la imagen:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
-    process.exit(1);
+      // Validar formato del nombre de archivo
+      if (!/^[\w\-\.]+$/.test(fileName)) {
+        res.status(400).json({
+          success: false,
+          error: 'Nombre de archivo no válido'
+        });
+        return;
+      }
+
+      // Eliminar la imagen del servicio de almacenamiento
+      await ImageService.deleteImage(fileName);
+
+      res.status(200).json({
+        success: true,
+        message: 'Imagen eliminada correctamente',
+        data: {
+          fileName: fileName
+        }
+      });
+
+    } catch (error) {
+      console.error('Error en ImageController.deleteImage:', error);
+      
+      // Manejar específicamente el error de archivo no encontrado
+      if (error instanceof Error && error.message.includes('No such object')) {
+        res.status(404).json({
+          success: false,
+          error: 'La imagen solicitada no existe'
+        });
+        return;
+      }
+
+      res.status(500).json({
+        success: false,
+        error: 'Error interno al eliminar la imagen',
+        details: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
   }
 }
-
-// 5. Ejecuta la subida
-uploadImage();
