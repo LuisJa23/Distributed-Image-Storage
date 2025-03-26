@@ -3,11 +3,11 @@ import express, { Application as ExpressApplication } from 'express';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import cors from 'cors'; // Importa cors
 import imageRoutes from './routes/routes';
 import { logger } from './utils/logger';
 import { errorHandler } from './middlewares/error_handler';
 import { DatabaseConnection } from './config/database_config';
+import { CorsConfig } from './config/cors_config';
 
 export class Application {
   private readonly app: ExpressApplication;
@@ -43,18 +43,8 @@ export class Application {
   }
 
   private configureMiddleware(): void {
-    // Configura CORS para permitir solicitudes desde localhost (cualquier puerto)
-    this.app.use(cors({
-      origin: (origin: string | undefined, callback: (arg0: Error | null, arg1: boolean | undefined) => any) => {
-        // Permitir solicitudes sin origin (por ejemplo, Postman)
-        if (!origin) return callback(null, true);
-        // Verifica que el origin sea localhost con o sin puerto
-        if (origin.match(/^http:\/\/localhost(:\d+)?$/)) {
-          return callback(null, true);
-        }
-        return callback(new Error('No permitido por CORS'), false);
-      }
-    }));
+    // Aplica la configuración de CORS desde el módulo CorsConfig
+    this.app.use(CorsConfig.getCorsMiddleware());
 
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
@@ -90,7 +80,7 @@ export class Application {
       });
     });
 
-    // Registra las rutas generales (notar que todas se están uniendo en un solo router)
+    // Registra las rutas generales (todas se unen en un solo router)
     this.app.use('/api', imageRoutes);
   }
 
