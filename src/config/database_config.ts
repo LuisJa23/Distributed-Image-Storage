@@ -1,3 +1,4 @@
+// src/config/database_config.ts
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { logger } from '../utils/logger';
@@ -33,11 +34,14 @@ export class DatabaseConnection {
       console.log('Entidades configuradas:', dataSource.options.entities);
       await dataSource.initialize();
       const entities = dataSource.entityMetadatas;
-      console.log('Entidades mapeadas:', entities.map(e => ({
-        name: e.name,
-        tableName: e.tableName,
-        columns: e.columns.map(c => c.propertyName)
-      })));
+      console.log(
+        'Entidades mapeadas:',
+        entities.map(e => ({
+          name: e.name,
+          tableName: e.tableName,
+          columns: e.columns.map(c => c.propertyName)
+        }))
+      );
       logger.info('Conexión a la base de datos establecida correctamente');
     } catch (error) {
       console.error('Error al conectar a la base de datos:', error);

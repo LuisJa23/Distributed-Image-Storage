@@ -1,3 +1,4 @@
+// src/services/bucket_service.ts
 import { DatabaseConnection } from '../config/database_config';
 import { Bucket } from '../entities/bucket';
 

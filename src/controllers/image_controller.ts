@@ -1,3 +1,4 @@
+// src/controllers/image_controller.ts
 import { Request, Response } from 'express';
 import { ImageService } from '../services/image_service';
 
