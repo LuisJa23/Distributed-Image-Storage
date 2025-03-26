@@ -10,7 +10,7 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Configuración segura de almacenamiento
+// Configuración de almacenamiento con nombres seguros
 const storage = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb) => {
     cb(null, uploadDir);
@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
   }
 });
 
-// Validación estricta de tipos MIME
+// Validación de tipos MIME permitidos
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const validMimeTypes = [
     'image/jpeg',
@@ -38,7 +38,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   }
 };
 
-// Configuración optimizada de Multer
+// Configuración de Multer con límites y validación
 const multerUpload = multer({
   storage,
   fileFilter,
@@ -46,17 +46,17 @@ const multerUpload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB
     files: 1,
     parts: 2,
-    headerPairs: 20 // Límite de headers
+    headerPairs: 20
   }
 });
 
-// Middleware seguro para manejo de uploads
+// Middleware para manejo seguro del upload
 export const uploadMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const upload = multerUpload.single('image');
 
   upload(req, res, (err: any) => {
     if (err) {
-      // Limpieza de archivos temporales en caso de error
+      // Si hay error y se creó un archivo temporal, eliminarlo
       if (req.file) {
         fs.unlinkSync(req.file.path);
       }

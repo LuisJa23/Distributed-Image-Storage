@@ -8,5 +8,5 @@ const storage = new Storage({
   keyFilename: process.env.KEYFILENAME
 });
 
-export const bucketName = process.env.BUCKET_NAME || 'default-bucket-name';
+export const bucketName = process.env.BUCKET_NAME || 'laboratorio_2';
 export const storageClient = storage;

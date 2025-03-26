@@ -8,7 +8,7 @@ export interface LabelResult {
 }
 
 export class VisionService {
-  // Función para limpiar archivos después de procesarlos
+  // Función para limpiar archivos (se usará en caso de error)
   private static cleanupFile(filePath: string) {
     if (visionConfig.keepTempFiles) {
       console.log(`Modo debug: Conservando archivo temporal ${filePath}`);
@@ -41,9 +41,7 @@ export class VisionService {
           rawScore: label.score || 0
         }));
 
-      // Limpiar archivo temporal
-      this.cleanupFile(filePath);
-
+      // No se elimina el archivo temporal aquí para permitir su posterior uso en StorageService.uploadImage
       return { 
         results: labels.length > 0 
           ? labels 
@@ -55,10 +53,10 @@ export class VisionService {
       };
 
     } catch (error) {
+      // En caso de error, se limpia el archivo temporal
       this.cleanupFile(filePath);
       console.error('Error en detectLabels:', error);
       throw new Error(`Error al analizar la imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   }
 }
-
