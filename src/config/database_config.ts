@@ -2,6 +2,8 @@ import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { logger } from "../utils/logger";
 import { Image } from "../entities/image";
+import { Label } from "../entities/label";
+import { Bucket } from "../entities/bucket";
 
 export class DatabaseConnection {
   private static instance: DataSource;
@@ -17,7 +19,7 @@ export class DatabaseConnection {
         username: process.env.DB_USERNAME || "root",
         password: process.env.DB_PASSWORD || "1123",
         database: "image_storage",
-        entities: [Image],
+        entities: [Image, Label, Bucket],
         // Importante: esto creará las tablas automáticamente
         synchronize: true, // Solo en desarrollo
         logging: true // Para ver qué está pasando
