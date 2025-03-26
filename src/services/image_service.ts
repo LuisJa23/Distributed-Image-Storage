@@ -1,3 +1,4 @@
+// src/services/image_service.ts
 import fs from 'fs';
 import path from 'path';
 import { StorageService } from './storage_service';
@@ -39,7 +40,11 @@ export class ImageService {
 
     // Verificar que el bucket tenga suficiente espacio (se asume bucket.storage en MB)
     if (bucket.storage < fileSizeMB) {
-      throw new Error(`El bucket no tiene espacio suficiente para esta imagen. La imagen requiere ${fileSizeMB.toFixed(2)} MB, pero solo hay ${bucket.storage.toFixed(2)} MB disponibles.`);
+      throw new Error(
+        `El bucket no tiene espacio suficiente para esta imagen. La imagen requiere ${fileSizeMB.toFixed(
+          2
+        )} MB, pero solo hay ${bucket.storage.toFixed(2)} MB disponibles.`
+      );
     }
 
     // Restar el tamaño de la imagen (en MB) al espacio disponible del bucket
@@ -90,5 +95,23 @@ export class ImageService {
       labels: labelsResult.results,
       storageInfo: storageResult
     };
+  }
+
+  // Nuevo método para listar imágenes con paginación
+  static async listImages(page: number = 1, limit: number = 50): Promise<{ images: Image[]; total: number }> {
+    const dataSource = DatabaseConnection.getInstance();
+    const imageRepository = dataSource.getRepository(Image);
+
+    // Calcular el offset en función de la página solicitada
+    const skip = (page - 1) * limit;
+
+    // Obtener la lista de imágenes y el total de registros
+    const [images, total] = await imageRepository.findAndCount({
+      skip,
+      take: limit,
+      order: { id: 'DESC' } // Ordena según tus necesidades (puede ser 'createdAt' si existe)
+    });
+
+    return { images, total };
   }
 }
