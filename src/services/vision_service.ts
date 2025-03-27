@@ -8,7 +8,11 @@ export interface LabelResult {
 }
 
 export class VisionService {
-  // Función para limpiar archivos (se usará en caso de error)
+  /**
+   * Limpia el archivo temporal.
+   * Si no está en modo debug, elimina el archivo especificado.
+   * @param filePath Ruta del archivo a limpiar.
+   */
   private static cleanupFile(filePath: string) {
     if (visionConfig.keepTempFiles) {
       console.log(`Modo debug: Conservando archivo temporal ${filePath}`);
@@ -25,14 +29,20 @@ export class VisionService {
     }
   }
 
-  // Método para detectar etiquetas en la imagen
+  /**
+   * Detecta etiquetas en la imagen usando Google Cloud Vision.
+   * Filtra las etiquetas según la confianza mínima configurada.
+   * @param filePath Ruta de la imagen.
+   * @returns Objeto con la lista de etiquetas detectadas.
+   * @throws Error si falla el análisis de la imagen.
+   */
   static async detectLabels(filePath: string): Promise<{ results: LabelResult[] }> {
     try {
       console.log(`Iniciando detección de etiquetas para: ${filePath}`);
       
       const [result] = await visionConfig.client.labelDetection(filePath);
 
-      // Procesar y filtrar resultados
+      // Procesa los resultados y filtra las etiquetas con confianza suficiente.
       const labels = (result.labelAnnotations || [])
         .filter(label => label.score && label.score >= visionConfig.minConfidence)
         .map(label => ({
@@ -41,7 +51,7 @@ export class VisionService {
           rawScore: label.score || 0
         }));
 
-      // No se elimina el archivo temporal aquí para permitir su posterior uso en StorageService.uploadImage
+      // Se retorna la lista de etiquetas; si no hay etiquetas válidas se retorna un mensaje predeterminado.
       return { 
         results: labels.length > 0 
           ? labels 
@@ -53,7 +63,7 @@ export class VisionService {
       };
 
     } catch (error) {
-      // En caso de error, se limpia el archivo temporal
+      // En caso de error, se limpia el archivo temporal y se lanza un error.
       this.cleanupFile(filePath);
       console.error('Error en detectLabels:', error);
       throw new Error(`Error al analizar la imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`);

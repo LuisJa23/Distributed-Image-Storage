@@ -1,4 +1,3 @@
-// src/config/database_config.ts
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { logger } from '../utils/logger';
@@ -6,11 +5,21 @@ import { Image } from '../entities/image';
 import { Label } from '../entities/label';
 import { Bucket } from '../entities/bucket';
 
+/**
+ * Clase DatabaseConnection: configura y gestiona la conexión a la base de datos.
+ */
 export class DatabaseConnection {
+  // Instancia singleton de DataSource para evitar múltiples conexiones.
   private static instance: DataSource;
 
+  // Constructor privado para forzar el uso del método getInstance().
   private constructor() {}
 
+  /**
+   * Retorna la instancia de DataSource.
+   * Si no existe, la crea usando la configuración del entorno.
+   * @returns Instancia de DataSource.
+   */
   public static getInstance(): DataSource {
     if (!this.instance) {
       this.instance = new DataSource({
@@ -21,13 +30,18 @@ export class DatabaseConnection {
         password: process.env.DB_PASSWORD || '1123',
         database: 'image_storage',
         entities: [Image, Label, Bucket],
-        synchronize: true, // Solo en desarrollo
+        synchronize: true, // Activado solo en desarrollo para sincronizar el esquema
         logging: true
       });
     }
     return this.instance;
   }
 
+  /**
+   * Inicializa la conexión a la base de datos.
+   * Imprime en consola las entidades configuradas y mapeadas.
+   * @throws Error si falla la conexión.
+   */
   public static async initialize(): Promise<void> {
     try {
       const dataSource = this.getInstance();

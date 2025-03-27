@@ -1,4 +1,3 @@
-// src/services/storage_service.ts
 import { Storage } from '@google-cloud/storage';
 import { storageClient } from '../config/storage_config';
 import path from 'path';
@@ -7,10 +6,20 @@ import { BucketService } from './bucket_service';
 
 export class StorageService {
   
-  // Método existente para subir imagen
+  /**
+   * Sube una imagen a Cloud Storage.
+   * 
+   * - Obtiene el bucket con más espacio disponible.
+   * - Sube el archivo a dicho bucket.
+   * - Elimina el archivo local después de la carga.
+   * 
+   * @param filePath Ruta local del archivo.
+   * @param destinationName (Opcional) Nombre de destino en el bucket.
+   * @returns Objeto con el nombre del archivo y su URL pública.
+   */
   static async uploadImage(filePath: string, destinationName?: string) {
     try {
-      // Consultar el bucket con más espacio disponible
+      // Obtener el bucket con más espacio disponible.
       const bucketService = new BucketService();
       const bucket = await bucketService.getBucketWithMostAvailableSpace();
       if (!bucket) {
@@ -19,6 +28,7 @@ export class StorageService {
       const bucketName = bucket.name;
       const destName = destinationName || path.basename(filePath);
       
+      // Subir el archivo a Cloud Storage.
       const [file] = await storageClient.bucket(bucketName).upload(filePath, {
         destination: destName,
         metadata: {
@@ -26,7 +36,7 @@ export class StorageService {
         }
       });
 
-      // Eliminar el archivo local después de subir
+      // Eliminar el archivo local tras la subida.
       fs.unlinkSync(filePath);
 
       return {
@@ -38,9 +48,17 @@ export class StorageService {
     }
   }
 
-  // Método existente para eliminar imagen usando el bucket con mayor espacio (no es el ideal para la eliminación específica)
+  /**
+   * Elimina una imagen de Cloud Storage.
+   * 
+   * - Utiliza el bucket con más espacio disponible para localizar el archivo.
+   * 
+   * @param fileName Nombre del archivo a eliminar.
+   * @returns true si se eliminó correctamente.
+   */
   static async deleteImage(fileName: string) {
     try {
+      // Obtener el bucket con más espacio disponible.
       const bucketService = new BucketService();
       const bucket = await bucketService.getBucketWithMostAvailableSpace();
       if (!bucket) {
@@ -54,7 +72,15 @@ export class StorageService {
     }
   }
 
-  // Nuevo método: eliminar imagen dado el bucket exacto y el nombre del archivo
+  /**
+   * Elimina una imagen de un bucket específico.
+   * 
+   * - Utiliza el nombre del bucket y el nombre del archivo para eliminar la imagen.
+   * 
+   * @param bucketName Nombre del bucket.
+   * @param fileName Nombre del archivo a eliminar.
+   * @returns true si la eliminación fue exitosa.
+   */
   static async deleteImageFromBucket(bucketName: string, fileName: string) {
     try {
       await storageClient.bucket(bucketName).file(fileName).delete();
@@ -63,10 +89,4 @@ export class StorageService {
       throw new Error(`Error al eliminar imagen del bucket ${bucketName}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
-
-
-  
-
-
-
 }
