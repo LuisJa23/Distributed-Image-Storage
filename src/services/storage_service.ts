@@ -5,7 +5,7 @@ import fs from 'fs';
 import { BucketService } from './bucket_service';
 
 export class StorageService {
-  // Función para subir imagen
+  // Método existente para subir imagen
   static async uploadImage(filePath: string, destinationName?: string) {
     try {
       // Consultar el bucket con más espacio disponible
@@ -36,10 +36,9 @@ export class StorageService {
     }
   }
 
-  // Función para eliminar imagen
+  // Método existente para eliminar imagen usando el bucket con mayor espacio (no es el ideal para la eliminación específica)
   static async deleteImage(fileName: string) {
     try {
-      // Consultar el bucket con más espacio disponible
       const bucketService = new BucketService();
       const bucket = await bucketService.getBucketWithMostAvailableSpace();
       if (!bucket) {
@@ -50,6 +49,16 @@ export class StorageService {
       return true;
     } catch (error) {
       throw new Error(`Error al eliminar imagen: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  // Nuevo método: eliminar imagen dado el bucket exacto y el nombre del archivo
+  static async deleteImageFromBucket(bucketName: string, fileName: string) {
+    try {
+      await storageClient.bucket(bucketName).file(fileName).delete();
+      return true;
+    } catch (error) {
+      throw new Error(`Error al eliminar imagen del bucket ${bucketName}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

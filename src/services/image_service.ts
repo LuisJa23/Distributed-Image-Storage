@@ -114,4 +114,37 @@ export class ImageService {
 
     return { images, total };
   }
+  
+  static async deleteImageById(imageId: number): Promise<any> {
+    const dataSource = DatabaseConnection.getInstance();
+    const imageRepository = dataSource.getRepository(Image);
+    
+    // Buscar la imagen por id e incluir la relación con bucket
+    const imageEntity = await imageRepository.findOne({
+      where: { id: imageId },
+      relations: ['bucket']
+    });
+    
+    if (!imageEntity) {
+      throw new Error('Imagen no encontrada.');
+    }
+    
+    // Eliminar la imagen de Google Cloud Storage utilizando el bucket específico
+    await StorageService.deleteImageFromBucket(imageEntity.bucket.name, imageEntity.file_name);
+
+    // Convertir el tamaño de la imagen a MB y liberar el espacio en el bucket
+    const fileSizeMB = imageEntity.size / (1024 * 1024);
+    imageEntity.bucket.storage += fileSizeMB;
+
+    // Actualizar el bucket en la BD
+    const bucketRepository = dataSource.getRepository(imageEntity.bucket.constructor);
+    await bucketRepository.save(imageEntity.bucket);
+
+    // Eliminar la entidad de imagen en la BD
+    await imageRepository.remove(imageEntity);
+
+    return true;
+  }
+
+
 }
