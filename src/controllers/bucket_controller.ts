@@ -28,4 +28,32 @@ export class BucketController {
       });
     }
   }
+
+  // Nuevo endpoint: crear un bucket en GCS y registrarlo en la BD
+  static async createBucket(req: Request, res: Response): Promise<void> {
+    try {
+      const { name } = req.body; // Supongamos que el nombre del bucket viene en req.body.name
+      if (!name) {
+        res.status(400).json({
+          success: false,
+          message: 'Debe proporcionar un nombre para el bucket.'
+        });
+      }
+
+      const bucketService = new BucketService();
+      const newBucket = await bucketService.createNewBucket(name);
+
+      res.status(201).json({
+        success: true,
+        message: 'Bucket creado correctamente.',
+        data: newBucket
+      });
+    } catch (error) {
+      console.error('Error al crear el bucket:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
+  }
 }

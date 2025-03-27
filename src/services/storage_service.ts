@@ -1,10 +1,12 @@
 // src/services/storage_service.ts
+import { Storage } from '@google-cloud/storage';
 import { storageClient } from '../config/storage_config';
 import path from 'path';
 import fs from 'fs';
 import { BucketService } from './bucket_service';
 
 export class StorageService {
+  
   // Método existente para subir imagen
   static async uploadImage(filePath: string, destinationName?: string) {
     try {
@@ -61,4 +63,10 @@ export class StorageService {
       throw new Error(`Error al eliminar imagen del bucket ${bucketName}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+
+
+  
+
+
+
 }
