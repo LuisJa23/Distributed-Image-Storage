@@ -146,5 +146,19 @@ export class ImageService {
     return true;
   }
 
+  static async findImagesByLabel(labelName: string): Promise<Image[]> {
+    const dataSource = DatabaseConnection.getInstance();
+    const imageRepository = dataSource.getRepository(Image);
+
+    const images = await imageRepository
+      .createQueryBuilder('image')
+      .innerJoinAndSelect('image.labels', 'label')
+      .innerJoinAndSelect('image.bucket', 'bucket') // Opcional, si quieres incluir datos del bucket
+      .where('LOWER(label.name) = LOWER(:labelName)', { labelName })
+      .getMany();
+
+    return images;
+  }
+
 
 }

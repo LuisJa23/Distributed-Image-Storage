@@ -68,4 +68,32 @@ export class ImageController {
       });
     }
   }
+
+  // ...
+static async getImagesByLabel(req: Request, res: Response): Promise<void> {
+  try {
+    let tag = req.query.tag as string;
+    if (!tag) {
+      res.status(400).json({ error: 'Debe proporcionar una etiqueta para filtrar.' });
+      return;
+    }
+
+    // Elimina espacios y saltos de línea del principio y final
+    tag = tag.trim();
+
+    const images = await ImageService.findImagesByLabel(tag);
+    res.status(200).json({
+      success: true,
+      data: images,
+      total: images.length
+    });
+  } catch (error) {
+    console.error('Error en ImageController.getImagesByLabel:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    });
+  }
+}
+// ...
+
 }
